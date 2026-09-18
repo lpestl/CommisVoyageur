@@ -1,11 +1,18 @@
 #include "Blueprint.h"
+#include "Camera.h"
 #include "Scene.h"
 
 #include <algorithm>
 #include <cmath>
 
 void Blueprint::setup() {
-    // Nothing to initialise yet; kept for symmetry with the Entity contract.
+    if (!scene_) {
+        return;
+    }
+
+    // Subscribe to camera position/zoom changes and sync our local state.
+    scene_->getCamera().addChangeListener([this]() { onCameraChanged(); });
+    onCameraChanged();
 }
 
 void Blueprint::draw() {
@@ -27,6 +34,22 @@ void Blueprint::draw() {
     const float minY = std::min(topLeft.y, bottomRight.y);
     const float maxY = std::max(topLeft.y, bottomRight.y);
 
+    drawGrid(minX, maxX, minY, maxY);
+    drawAxes(minX, maxX, minY, maxY);
+
+    // Restore the default line width for any subsequent drawing.
+    ofSetLineWidth(1.0f);
+}
+
+void Blueprint::onCameraChanged() {
+    if (!scene_) {
+        return;
+    }
+    zoom_ = scene_->getCamera().getZoom();
+    cameraPosition_ = scene_->getCamera().getPosition();
+}
+
+void Blueprint::drawGrid(float minX, float maxX, float minY, float maxY) {
     const int x0 = static_cast<int>(std::floor(minX));
     const int x1 = static_cast<int>(std::ceil(maxX));
     const int y0 = static_cast<int>(std::floor(minY));
@@ -34,24 +57,48 @@ void Blueprint::draw() {
 
     ofSetColor(ofColor::white);
 
-    // --- Vertical grid lines (one per integer world-x) ---
+    // Vertical grid lines (one per integer world-x).
     for (int x = x0; x <= x1; ++x) {
         ofSetLineWidth(lineWidthFor(x));
-        const glm::vec2 a = scene_->worldToScreen(glm::vec2(x, minY));
-        const glm::vec2 b = scene_->worldToScreen(glm::vec2(x, maxY));
-        ofDrawLine(a.x, a.y, b.x, b.y);
+        drawWorldLine(glm::vec2(x, minY), glm::vec2(x, maxY));
     }
 
-    // --- Horizontal grid lines (one per integer world-y) ---
+    // Horizontal grid lines (one per integer world-y).
     for (int y = y0; y <= y1; ++y) {
         ofSetLineWidth(lineWidthFor(y));
-        const glm::vec2 a = scene_->worldToScreen(glm::vec2(minX, y));
-        const glm::vec2 b = scene_->worldToScreen(glm::vec2(maxX, y));
-        ofDrawLine(a.x, a.y, b.x, b.y);
+        drawWorldLine(glm::vec2(minX, y), glm::vec2(maxX, y));
+    }
+}
+
+void Blueprint::drawAxes(float minX, float maxX, float minY, float maxY) {
+    const bool showYAxis = (minX <= 0.0f && 0.0f <= maxX);
+    const bool showXAxis = (minY <= 0.0f && 0.0f <= maxY);
+
+    // Thick white highlight drawn first...
+    ofSetColor(ofColor::white);
+    ofSetLineWidth(5.0f);
+    if (showYAxis) {
+        drawWorldLine(glm::vec2(0.0f, minY), glm::vec2(0.0f, maxY));
+    }
+    if (showXAxis) {
+        drawWorldLine(glm::vec2(minX, 0.0f), glm::vec2(maxX, 0.0f));
     }
 
-    // Restore the default line width for any subsequent drawing.
+    // ...then a thin black core on top.
+    ofSetColor(ofColor::black);
     ofSetLineWidth(1.0f);
+    if (showYAxis) {
+        drawWorldLine(glm::vec2(0.0f, minY), glm::vec2(0.0f, maxY));
+    }
+    if (showXAxis) {
+        drawWorldLine(glm::vec2(minX, 0.0f), glm::vec2(maxX, 0.0f));
+    }
+}
+
+void Blueprint::drawWorldLine(const glm::vec2& a, const glm::vec2& b) const {
+    const glm::vec2 sa = scene_->worldToScreen(a);
+    const glm::vec2 sb = scene_->worldToScreen(b);
+    ofDrawLine(sa.x, sa.y, sb.x, sb.y);
 }
 
 int Blueprint::lineWidthFor(int coord) const {

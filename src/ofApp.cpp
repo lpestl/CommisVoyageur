@@ -35,17 +35,22 @@ void ofApp::mouseMoved(int x, int y ){
 
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button){
-
+	scene_.mouseDragged(x, y, button);
 }
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
-
+	scene_.mousePressed(x, y, button);
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
+	scene_.mouseReleased(x, y, button);
+}
 
+//--------------------------------------------------------------
+void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY){
+	scene_.mouseScrolled(x, y, scrollX, scrollY);
 }
 
 //--------------------------------------------------------------
@@ -60,7 +65,7 @@ void ofApp::mouseExited(int x, int y){
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
-
+	scene_.windowResized(w, h);
 }
 
 //--------------------------------------------------------------
