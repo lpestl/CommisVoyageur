@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <cmath>
 
+// Gap between a value label and its line/edge (px).
+constexpr float kLabelPadding = 4.0f;
+
 void Blueprint::setup() {
     if (!scene_) {
         return;
@@ -82,6 +85,124 @@ void Blueprint::drawGrid(float minX, float maxX, float minY, float maxY) {
         ofSetLineWidth(s.lineWidth);
         drawWorldLine(glm::vec2(minX, wy), glm::vec2(maxX, wy));
     }
+
+    // Value labels for middle/big lines.
+    drawGridLabels(minX, maxX, minY, maxY, smallUnit, smallSpacing);
+}
+
+void Blueprint::drawGridLabels(float minX, float maxX, float minY, float maxY,
+                               int smallUnit, float smallSpacing) {
+    const bool xAxisVisible = (minY <= 0.0f && 0.0f <= maxY);
+    const bool yAxisVisible = (minX <= 0.0f && 0.0f <= maxX);
+
+    // Vertical line labels (x values).
+    const int n0 = static_cast<int>(std::ceil(minX / smallSpacing));
+    const int n1 = static_cast<int>(std::floor(maxX / smallSpacing));
+    for (int n = n0; n <= n1; ++n) {
+        const int k = n * smallUnit;
+        const GridStepSettings& s = settingsFor(k);
+        if (!s.bDrawLabel) {
+            continue;
+        }
+
+        const float wx = n * smallSpacing;
+        float anchorY;
+        bool alignBottom;
+        if (xAxisVisible) {
+            anchorY = 0.0f;       // on the X axis
+            alignBottom = false;  // text below the axis
+        } else if (maxY < 0.0f) {
+            anchorY = maxY;       // top edge
+            alignBottom = false;  // text below the top edge
+        } else {
+            anchorY = minY;       // bottom edge
+            alignBottom = true;   // text above the bottom edge
+        }
+
+        drawLabel(formatUnitLabel(wx), glm::vec2(wx, anchorY), s.labelColor,
+                  /*alignRight=*/false, alignBottom, s.fontSize, s.bBold);
+    }
+
+    // Horizontal line labels (y values).
+    const int m0 = static_cast<int>(std::ceil(minY / smallSpacing));
+    const int m1 = static_cast<int>(std::floor(maxY / smallSpacing));
+    for (int m = m0; m <= m1; ++m) {
+        const int k = m * smallUnit;
+        const GridStepSettings& s = settingsFor(k);
+        if (!s.bDrawLabel) {
+            continue;
+        }
+
+        const float wy = m * smallSpacing;
+        float anchorX;
+        bool alignRight;
+        if (yAxisVisible) {
+            anchorX = 0.0f;      // on the Y axis
+            alignRight = false;  // text to the right of the axis
+        } else if (maxX < 0.0f) {
+            anchorX = maxX;      // right edge
+            alignRight = true;   // text to the left of the right edge
+        } else {
+            anchorX = minX;      // left edge
+            alignRight = false;  // text to the right of the left edge
+        }
+
+        drawLabel(formatUnitLabel(wy), glm::vec2(anchorX, wy), s.labelColor,
+                  alignRight, /*alignBottom=*/false, s.fontSize, s.bBold);
+    }
+}
+
+void Blueprint::drawLabel(const std::string& text, const glm::vec2& worldAnchor,
+                          const ofColor& color, bool alignRight, bool alignBottom,
+                          int fontSize, bool bold) {
+    const glm::vec2 screen = scene_->worldToScreen(worldAnchor);
+    const ofTrueTypeFont& font = getLabelFont(fontSize);
+    const float textWidth = font.getStringBoundingBox(text, 0, 0).width;
+    const float lineHeight = font.getLineHeight();
+
+    float x = screen.x;
+    if (alignRight) {
+        x -= textWidth + kLabelPadding; // text ends just left of the anchor
+    } else {
+        x += kLabelPadding;             // text starts just right of the anchor
+    }
+
+    float y = screen.y;
+    if (alignBottom) {
+        // Baseline sits just above the anchor line.
+        y -= kLabelPadding;
+    } else {
+        // Text top sits just below the anchor line.
+        y += lineHeight + kLabelPadding;
+    }
+
+    ofSetColor(color);
+    font.drawString(text, x, y);
+    if (bold) {
+        // Fake bold: draw once more with a 1px horizontal offset.
+        font.drawString(text, x + 1.0f, y);
+    }
+}
+
+const ofTrueTypeFont& Blueprint::getLabelFont(int fontSize) {
+    auto it = labelFonts_.find(fontSize);
+    if (it == labelFonts_.end()) {
+        ofTrueTypeFont font;
+        if (!font.load("verdana.ttf", fontSize)) {
+            ofLogWarning("Blueprint") << "Failed to load verdana.ttf at size " << fontSize;
+        }
+        it = labelFonts_.emplace(fontSize, font).first;
+    }
+    return it->second;
+}
+
+std::string Blueprint::formatUnitLabel(float value) const {
+    // Round away floating-point noise (e.g. 50.000001) and drop a trailing ".0".
+    const double rounded = std::round(value * 100.0) / 100.0;
+    if (std::fabs(rounded - std::round(rounded)) < 0.001) {
+        return ofToString(static_cast<int>(std::round(rounded)));
+    }
+    return ofToString(rounded);
 }
 
 void Blueprint::drawAxes(float minX, float maxX, float minY, float maxY) {
@@ -139,6 +260,10 @@ bool Blueprint::loadSettings() {
             s.lineWidth = static_cast<float>(
                 xml.getValue("lineWidth", static_cast<double>(s.lineWidth)));
             s.stepUnitSize = xml.getValue("stepUnitSize", s.stepUnitSize);
+            s.labelColor = readColor("labelColor", s.labelColor);
+            s.bDrawLabel = xml.getValue("bDrawLabel", s.bDrawLabel ? 1 : 0) != 0;
+            s.fontSize = xml.getValue("fontSize", s.fontSize);
+            s.bBold = xml.getValue("bBold", s.bBold ? 1 : 0) != 0;
             xml.popTag();
         }
         return s;

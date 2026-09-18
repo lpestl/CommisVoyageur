@@ -3,17 +3,27 @@
 #include "Entity.h"
 #include "ofMain.h"
 
+#include <map>
+
 // Settings for a single level of grid lines. `stepUnitSize` is a multiplier
 // of the adaptive base step; `lineColor`/`lineWidth` describe how the lines
-// are drawn.
+// are drawn, `labelColor`/`bDrawLabel` describe the optional value label.
 struct GridStepSettings {
     GridStepSettings() = default;
-    GridStepSettings(const ofColor& color, float width, int unitSize)
-        : lineColor(color), lineWidth(width), stepUnitSize(unitSize) {}
+    GridStepSettings(const ofColor& lineColor, float lineWidth, int stepUnitSize,
+                     const ofColor& labelColor = ofColor::black, bool bDrawLabel = false,
+                     int fontSize = 12, bool bBold = false)
+        : lineColor(lineColor), lineWidth(lineWidth), stepUnitSize(stepUnitSize),
+          labelColor(labelColor), bDrawLabel(bDrawLabel),
+          fontSize(fontSize), bBold(bBold) {}
 
     ofColor lineColor{ofColor::white};
     float lineWidth = 1.0f;
     int stepUnitSize = 1;
+    ofColor labelColor{ofColor::black};
+    bool bDrawLabel = false;
+    int fontSize = 12;
+    bool bBold = false;
 };
 
 // A blueprint-style background entity: fills the scene with a solid colour
@@ -41,8 +51,17 @@ private:
     const GridStepSettings& settingsFor(int k) const;
 
     void drawGrid(float minX, float maxX, float minY, float maxY);
+    void drawGridLabels(float minX, float maxX, float minY, float maxY,
+                        int smallUnit, float smallSpacing);
     void drawAxes(float minX, float maxX, float minY, float maxY);
     void drawWorldLine(const glm::vec2& a, const glm::vec2& b) const;
+
+    // Unit-value label helpers.
+    const ofTrueTypeFont& getLabelFont(int fontSize);
+    void drawLabel(const std::string& text, const glm::vec2& worldAnchor,
+                   const ofColor& color, bool alignRight, bool alignBottom,
+                   int fontSize, bool bold);
+    std::string formatUnitLabel(float value) const;
 
     // Called whenever the camera position/zoom changes.
     void onCameraChanged();
@@ -56,9 +75,12 @@ private:
     float kMaxSpacingPx_ = 250.0f;
     float stepMultiplier_ = 5.0f;
 
-    GridStepSettings smallStepSettings_{ofColor::white, 1.0f, 1};
-    GridStepSettings middleStepSettings_{ofColor::white, 2.0f, 5};
-    GridStepSettings bigStepSettings_{ofColor::white, 3.0f, 10};
+    GridStepSettings smallStepSettings_{ofColor::white, 1.0f, 1, ofColor::black, false};
+    GridStepSettings middleStepSettings_{ofColor::white, 2.0f, 5, ofColor::black, true};
+    GridStepSettings bigStepSettings_{ofColor::white, 3.0f, 10, ofColor::black, true};
+
+    // Cached label fonts, keyed by font size.
+    std::map<int, ofTrueTypeFont> labelFonts_;
 
     // --- Runtime state (synced from the camera) ---
     float zoom_ = 1.0f;
