@@ -53,6 +53,11 @@ bld/
 # (https://github.com/github/gitignore/pull/3736)
 #!**/[Bb]in/*.refresh
 
+# The openFrameworks data directory (bin/data) and all of its contents are
+# tracked by git (e.g. BlueprintSettings.xml).
+!**/[Bb]in/data/
+!**/[Bb]in/data/**
+
 # Visual Studio 2015/2017 cache/options directory
 .vs/
 # JetBrains IDEs cache/options directory
