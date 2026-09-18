@@ -63,6 +63,8 @@ bld/
 *.sln
 *.vcxproj
 *.vcxproj.filters
+# Recources files
+*.rc
 
 # Uncomment if you have tasks that create the project's static files in wwwroot
 #wwwroot/
