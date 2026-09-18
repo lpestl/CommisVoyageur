@@ -68,8 +68,26 @@ glm::vec2 Scene::screenToWorld(const glm::vec2& screen) const {
 
 void Scene::mouseScrolled(int x, int y, float scrollX, float scrollY) {
     constexpr float zoomStep = 0.1f;
+
+    // World point currently under the mouse cursor (before zooming).
+    const glm::vec2 mouseScreen(x, y);
+    const glm::vec2 worldUnderMouse = screenToWorld(mouseScreen);
+
+    // Apply the new zoom.
     const float factor = 1.0f + scrollY * zoomStep;
     camera_.setZoom(camera_.getZoom() * factor);
+
+    // Keep the point under the cursor fixed: recompute the camera position so
+    // the same world point stays under the mouse after zooming.
+    const float cx = ofGetWidth() / 2.0f;
+    const float cy = ofGetHeight() / 2.0f;
+    const float ppu = getPixelsPerUnit(); // reflects the new zoom
+
+    const glm::vec2 newPosition(
+        worldUnderMouse.x - (mouseScreen.x - cx) / ppu,
+        worldUnderMouse.y + (mouseScreen.y - cy) / ppu);
+
+    camera_.setPosition(newPosition);
 }
 
 void Scene::mousePressed(int x, int y, int button) {
