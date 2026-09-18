@@ -4,15 +4,15 @@
 #include "ofMain.h"
 
 #include <map>
+#include <vector>
 
-// Settings for a single level of grid lines. `stepUnitSize` is a multiplier
-// of the adaptive base step; `lineColor`/`lineWidth` describe how the lines
-// are drawn, `labelColor`/`bDrawLabel` describe the optional value label.
-struct GridStepSettings {
-    GridStepSettings() = default;
-    GridStepSettings(const ofColor& lineColor, float lineWidth, int stepUnitSize,
-                     const ofColor& labelColor = ofColor::black, bool bDrawLabel = false,
-                     int fontSize = 12, bool bBold = false)
+// A single line pattern for the grid: how often the lines repeat and how they
+// (and their optional value label) are drawn.
+struct LinesPattern {
+    LinesPattern() = default;
+    LinesPattern(const ofColor& lineColor, float lineWidth, int stepUnitSize,
+                 const ofColor& labelColor = ofColor::black, bool bDrawLabel = false,
+                 int fontSize = 12, bool bBold = false)
         : lineColor(lineColor), lineWidth(lineWidth), stepUnitSize(stepUnitSize),
           labelColor(labelColor), bDrawLabel(bDrawLabel),
           fontSize(fontSize), bBold(bBold) {}
@@ -47,8 +47,8 @@ private:
     // Chooses the adaptive base grid step for the current zoom.
     float computeBaseStep() const;
 
-    // Returns the settings for the grid line at the given base-step index.
-    const GridStepSettings& settingsFor(int k) const;
+    // Returns the pattern for the grid line at the given base-step index.
+    const LinesPattern& settingsFor(int k) const;
 
     void drawGrid(float minX, float maxX, float minY, float maxY);
     void drawGridLabels(float minX, float maxX, float minY, float maxY,
@@ -75,9 +75,12 @@ private:
     float kMaxSpacingPx_ = 250.0f;
     float stepMultiplier_ = 5.0f;
 
-    GridStepSettings smallStepSettings_{ofColor::white, 1.0f, 1, ofColor::black, false};
-    GridStepSettings middleStepSettings_{ofColor::white, 2.0f, 5, ofColor::black, true};
-    GridStepSettings bigStepSettings_{ofColor::white, 3.0f, 10, ofColor::black, true};
+    // Grid line patterns, kept sorted by stepUnitSize ascending (minor -> major).
+    std::vector<LinesPattern> linesPatterns_ = {
+        LinesPattern{ofColor::white, 1.0f, 1},                       // minor
+        LinesPattern{ofColor::white, 2.0f, 5, ofColor::black, true}, // medium
+        LinesPattern{ofColor::white, 3.0f, 10, ofColor::black, true} // major
+    };
 
     // Cached label fonts, keyed by font size.
     std::map<int, ofTrueTypeFont> labelFonts_;

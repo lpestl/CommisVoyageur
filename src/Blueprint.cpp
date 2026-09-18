@@ -61,7 +61,7 @@ void Blueprint::drawGrid(float minX, float maxX, float minY, float maxY) {
     }
 
     const float baseStep = computeBaseStep();
-    const int smallUnit = std::max(1, smallStepSettings_.stepUnitSize);
+    const int smallUnit = std::max(1, linesPatterns_.front().stepUnitSize);
     const float smallSpacing = baseStep * smallUnit;
 
     // Vertical grid lines.
@@ -69,7 +69,7 @@ void Blueprint::drawGrid(float minX, float maxX, float minY, float maxY) {
     const int n1 = static_cast<int>(std::floor(maxX / smallSpacing));
     for (int n = n0; n <= n1; ++n) {
         const float wx = n * smallSpacing;
-        const GridStepSettings& s = settingsFor(n * smallUnit);
+        const LinesPattern& s = settingsFor(n * smallUnit);
         ofSetColor(s.lineColor);
         ofSetLineWidth(s.lineWidth);
         drawWorldLine(glm::vec2(wx, minY), glm::vec2(wx, maxY));
@@ -80,7 +80,7 @@ void Blueprint::drawGrid(float minX, float maxX, float minY, float maxY) {
     const int m1 = static_cast<int>(std::floor(maxY / smallSpacing));
     for (int m = m0; m <= m1; ++m) {
         const float wy = m * smallSpacing;
-        const GridStepSettings& s = settingsFor(m * smallUnit);
+        const LinesPattern& s = settingsFor(m * smallUnit);
         ofSetColor(s.lineColor);
         ofSetLineWidth(s.lineWidth);
         drawWorldLine(glm::vec2(minX, wy), glm::vec2(maxX, wy));
@@ -100,7 +100,7 @@ void Blueprint::drawGridLabels(float minX, float maxX, float minY, float maxY,
     const int n1 = static_cast<int>(std::floor(maxX / smallSpacing));
     for (int n = n0; n <= n1; ++n) {
         const int k = n * smallUnit;
-        const GridStepSettings& s = settingsFor(k);
+        const LinesPattern& s = settingsFor(k);
         if (!s.bDrawLabel) {
             continue;
         }
@@ -128,7 +128,7 @@ void Blueprint::drawGridLabels(float minX, float maxX, float minY, float maxY,
     const int m1 = static_cast<int>(std::floor(maxY / smallSpacing));
     for (int m = m0; m <= m1; ++m) {
         const int k = m * smallUnit;
-        const GridStepSettings& s = settingsFor(k);
+        const LinesPattern& s = settingsFor(k);
         if (!s.bDrawLabel) {
             continue;
         }
@@ -251,22 +251,18 @@ bool Blueprint::loadSettings() {
         return ofColor(r, g, b);
     };
 
-    // Read a nested <...StepSettings> block.
-    auto readStep = [&xml, &readColor](const std::string& tag,
-                                       const GridStepSettings& fallback) {
-        GridStepSettings s = fallback;
-        if (xml.pushTag(tag)) {
-            s.lineColor = readColor("lineColor", s.lineColor);
-            s.lineWidth = static_cast<float>(
-                xml.getValue("lineWidth", static_cast<double>(s.lineWidth)));
-            s.stepUnitSize = xml.getValue("stepUnitSize", s.stepUnitSize);
-            s.labelColor = readColor("labelColor", s.labelColor);
-            s.bDrawLabel = xml.getValue("bDrawLabel", s.bDrawLabel ? 1 : 0) != 0;
-            s.fontSize = xml.getValue("fontSize", s.fontSize);
-            s.bBold = xml.getValue("bBold", s.bBold ? 1 : 0) != 0;
-            xml.popTag();
-        }
-        return s;
+    // Reads a single <linePattern> block (assumes the tag is already pushed).
+    auto readPattern = [&xml, &readColor]() {
+        LinesPattern p;
+        p.lineColor = readColor("lineColor", p.lineColor);
+        p.lineWidth = static_cast<float>(
+            xml.getValue("lineWidth", static_cast<double>(p.lineWidth)));
+        p.stepUnitSize = xml.getValue("stepUnitSize", p.stepUnitSize);
+        p.labelColor = readColor("labelColor", p.labelColor);
+        p.bDrawLabel = xml.getValue("bDrawLabel", p.bDrawLabel ? 1 : 0) != 0;
+        p.fontSize = xml.getValue("fontSize", p.fontSize);
+        p.bBold = xml.getValue("bBold", p.bBold ? 1 : 0) != 0;
+        return p;
     };
 
     xml.pushTag("Blueprint");
@@ -283,9 +279,28 @@ bool Blueprint::loadSettings() {
     stepMultiplier_ = static_cast<float>(
         xml.getValue("stepMultiplier", static_cast<double>(stepMultiplier_)));
 
-    smallStepSettings_ = readStep("smallStepSettings", smallStepSettings_);
-    middleStepSettings_ = readStep("middleStepSettings", middleStepSettings_);
-    bigStepSettings_ = readStep("bigStepSettings", bigStepSettings_);
+    // Read the <linesPatterns> array of <linePattern> blocks.
+    if (xml.pushTag("linesPatterns")) {
+        const int numPatterns = xml.getNumTags("linePattern");
+        std::vector<LinesPattern> patterns;
+        patterns.reserve(numPatterns);
+        for (int i = 0; i < numPatterns; ++i) {
+            xml.pushTag("linePattern", i);
+            patterns.push_back(readPattern());
+            xml.popTag();
+        }
+        xml.popTag(); // linesPatterns
+
+        if (!patterns.empty()) {
+            linesPatterns_ = std::move(patterns);
+        }
+    }
+
+    // Keep patterns sorted by stepUnitSize ascending (minor -> major).
+    std::sort(linesPatterns_.begin(), linesPatterns_.end(),
+              [](const LinesPattern& a, const LinesPattern& b) {
+                  return a.stepUnitSize < b.stepUnitSize;
+              });
 
     xml.popTag();
     
@@ -304,7 +319,7 @@ float Blueprint::computeBaseStep() const {
     }
 
     const float smallUnit =
-        static_cast<float>(std::max(1, smallStepSettings_.stepUnitSize));
+        static_cast<float>(std::max(1, linesPatterns_.front().stepUnitSize));
 
     float step = 1.0f;
     // Coarsen while the smallest grid lines are denser than kMinSpacingPx.
@@ -318,14 +333,13 @@ float Blueprint::computeBaseStep() const {
     return step;
 }
 
-const GridStepSettings& Blueprint::settingsFor(int k) const {
-    if (bigStepSettings_.stepUnitSize > 0 &&
-        (k % bigStepSettings_.stepUnitSize) == 0) {
-        return bigStepSettings_;
+const LinesPattern& Blueprint::settingsFor(int k) const {
+    // Patterns are sorted ascending by stepUnitSize; pick the largest one
+    // whose step divides k (major lines win over minor ones).
+    for (auto it = linesPatterns_.rbegin(); it != linesPatterns_.rend(); ++it) {
+        if (it->stepUnitSize > 0 && (k % it->stepUnitSize) == 0) {
+            return *it;
+        }
     }
-    if (middleStepSettings_.stepUnitSize > 0 &&
-        (k % middleStepSettings_.stepUnitSize) == 0) {
-        return middleStepSettings_;
-    }
-    return smallStepSettings_;
+    return linesPatterns_.front();
 }

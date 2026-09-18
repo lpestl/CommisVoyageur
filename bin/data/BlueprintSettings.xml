@@ -18,36 +18,34 @@
     <kMaxSpacingPx>200</kMaxSpacingPx>
     <stepMultiplier>5</stepMultiplier>
 
-    <!-- Minor grid lines (one per adaptive base step). -->
-    <smallStepSettings>
-        <lineColor r="255" g="255" b="255" />
-        <lineWidth>1</lineWidth>
-        <stepUnitSize>1</stepUnitSize>
-        <labelColor r="0" g="0" b="0" />
-        <bDrawLabel>1</bDrawLabel>
-        <fontSize>12</fontSize>
-        <bBold>1</bBold>
-    </smallStepSettings>
-
-    <!-- Medium grid lines. -->
-    <middleStepSettings>
-        <lineColor r="255" g="255" b="255" />
-        <lineWidth>2</lineWidth>
-        <stepUnitSize>5</stepUnitSize>
-        <labelColor r="0" g="0" b="0" />
-        <bDrawLabel>1</bDrawLabel>
-        <fontSize>12</fontSize>
-        <bBold>1</bBold>
-    </middleStepSettings>
-
-    <!-- Major grid lines. -->
-    <bigStepSettings>
-        <lineColor r="255" g="255" b="255" />
-        <lineWidth>3</lineWidth>
-        <stepUnitSize>10</stepUnitSize>
-        <labelColor r="0" g="0" b="0" />
-        <bDrawLabel>1</bDrawLabel>
-        <fontSize>12</fontSize>
-        <bBold>1</bBold>
-    </bigStepSettings>
+    <!-- Grid line patterns (minor -> major). -->
+    <linesPatterns>
+        <linePattern>
+            <lineColor r="255" g="255" b="255" />
+            <lineWidth>1</lineWidth>
+            <stepUnitSize>1</stepUnitSize>
+            <labelColor r="0" g="0" b="0" />
+            <bDrawLabel>1</bDrawLabel>
+            <fontSize>12</fontSize>
+            <bBold>1</bBold>
+        </linePattern>
+        <linePattern>
+            <lineColor r="255" g="255" b="255" />
+            <lineWidth>2</lineWidth>
+            <stepUnitSize>5</stepUnitSize>
+            <labelColor r="0" g="0" b="0" />
+            <bDrawLabel>1</bDrawLabel>
+            <fontSize>12</fontSize>
+            <bBold>1</bBold>
+        </linePattern>
+        <linePattern>
+            <lineColor r="255" g="255" b="255" />
+            <lineWidth>3</lineWidth>
+            <stepUnitSize>10</stepUnitSize>
+            <labelColor r="0" g="0" b="0" />
+            <bDrawLabel>1</bDrawLabel>
+            <fontSize>12</fontSize>
+            <bBold>1</bBold>
+        </linePattern>
+    </linesPatterns>
 </Blueprint>
