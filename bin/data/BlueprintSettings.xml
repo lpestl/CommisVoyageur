@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Settings for the Blueprint background/grid entity. -->
+<Blueprint>
+    <!-- Background fill colour (RGB). -->
+    <backgroundColor r="30" g="70" b="140" />
+
+    <!-- Colour of the X=0 / Y=0 axes highlight. -->
+    <lineColor r="255" g="255" b="255" />
+
+    <!-- Thickness (px) of the axes highlight. -->
+    <axisLineWidth>5</axisLineWidth>
+
+    <!-- Whether to draw the grid lines (0 or 1). -->
+    <bVisibleGrid>1</bVisibleGrid>
+
+    <!-- Adaptive grid spacing bounds (px) and scaling factor. -->
+    <kMinSpacingPx>25</kMinSpacingPx>
+    <kMaxSpacingPx>200</kMaxSpacingPx>
+    <stepMultiplier>5</stepMultiplier>
+
+    <!-- Grid line patterns (minor -> major). -->
+    <linesPatterns>
+        <linePattern>
+            <lineColor r="255" g="255" b="255" />
+            <lineWidth>1</lineWidth>
+            <stepUnitSize>1</stepUnitSize>
+            <labelColor r="0" g="0" b="0" />
+            <bDrawLabel>1</bDrawLabel>
+            <fontSize>12</fontSize>
+            <bBold>1</bBold>
+        </linePattern>
+        <linePattern>
+            <lineColor r="255" g="255" b="255" />
+            <lineWidth>2</lineWidth>
+            <stepUnitSize>5</stepUnitSize>
+            <labelColor r="0" g="0" b="0" />
+            <bDrawLabel>1</bDrawLabel>
+            <fontSize>12</fontSize>
+            <bBold>1</bBold>
+        </linePattern>
+        <linePattern>
+            <lineColor r="255" g="255" b="255" />
+            <lineWidth>3</lineWidth>
+            <stepUnitSize>10</stepUnitSize>
+            <labelColor r="0" g="0" b="0" />
+            <bDrawLabel>1</bDrawLabel>
+            <fontSize>12</fontSize>
+            <bBold>1</bBold>
+        </linePattern>
+    </linesPatterns>
+</Blueprint>
