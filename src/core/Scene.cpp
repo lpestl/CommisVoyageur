@@ -1,5 +1,5 @@
 #include "Scene.h"
-#include "ofNode.h"
+#include "../graph/views/ofNode.h"
 
 Scene::Scene() {
 }

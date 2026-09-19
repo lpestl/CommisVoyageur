@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "Entity.h"
 #include "Camera.h"
-#include "Graph.h"
+#include "../graph/Graph.h"
 
 #include <memory>
 #include <vector>

@@ -1,5 +1,5 @@
 #include "ofApp.h"
-#include "Blueprint.h"
+#include "core/Blueprint.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){

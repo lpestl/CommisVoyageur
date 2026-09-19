@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Entity.h"
-#include "Node.h"
+#include "../../core/Entity.h"
+#include "../Node.h"
 #include "ofMain.h"
 
 namespace graph {

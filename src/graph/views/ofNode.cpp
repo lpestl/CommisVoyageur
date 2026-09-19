@@ -1,6 +1,6 @@
 #include "ofNode.h"
 
-#include "Scene.h"
+#include "../../core/Scene.h"
 
 namespace graph {
 
