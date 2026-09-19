@@ -20,6 +20,15 @@ public:
     // Called every frame; must be implemented by concrete entities.
     virtual void draw() = 0;
 
+    // Mouse interaction, forwarded from the Scene. All coordinates are in
+    // screen pixels. Default implementations do nothing; interactive entities
+    // override the events they care about.
+    virtual void mouseMoved(int x, int y) {}
+    virtual void mouseDragged(int x, int y, int button) {}
+    virtual void mousePressed(int x, int y, int button) {}
+    virtual void mouseReleased(int x, int y, int button) {}
+    virtual void mouseScrolled(int x, int y, float scrollX, float scrollY) {}
+
     // Injected by Scene::addEntity; provides world<->screen transforms.
     void setScene(Scene* scene) { scene_ = scene; }
 

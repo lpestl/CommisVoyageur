@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "ofNode.h"
 
 Scene::Scene() {
 }
@@ -90,32 +91,59 @@ void Scene::mouseScrolled(int x, int y, float scrollX, float scrollY) {
     camera_.setPosition(newPosition);
 }
 
+void Scene::mouseMoved(int x, int y) {
+    for (auto& entity : entities_) {
+        entity->mouseMoved(x, y);
+    }
+}
+
 void Scene::mousePressed(int x, int y, int button) {
     if (button == OF_MOUSE_BUTTON_MIDDLE) {
         panning_ = true;
         lastMouseScreen_ = glm::vec2(x, y);
     }
+
+    for (auto& entity : entities_) {
+        entity->mousePressed(x, y, button);
+    }
 }
 
 void Scene::mouseDragged(int x, int y, int button) {
-    if (!panning_ || button != OF_MOUSE_BUTTON_MIDDLE) {
-        return;
+    if (panning_ && button == OF_MOUSE_BUTTON_MIDDLE) {
+        const glm::vec2 current(x, y);
+        const glm::vec2 deltaScreen = current - lastMouseScreen_;
+        const float ppu = getPixelsPerUnit();
+
+        // Move the camera opposite to the mouse so the content follows the
+        // cursor (grab-and-drag). The y sign is inverted because screen +y
+        // points down.
+        camera_.moveBy(glm::vec2(-deltaScreen.x / ppu, deltaScreen.y / ppu));
+
+        lastMouseScreen_ = current;
     }
 
-    const glm::vec2 current(x, y);
-    const glm::vec2 deltaScreen = current - lastMouseScreen_;
-    const float ppu = getPixelsPerUnit();
-
-    // Move the camera opposite to the mouse so the content follows the cursor
-    // (grab-and-drag). The y sign is inverted because screen +y points down.
-    camera_.moveBy(glm::vec2(-deltaScreen.x / ppu, deltaScreen.y / ppu));
-
-    lastMouseScreen_ = current;
+    for (auto& entity : entities_) {
+        entity->mouseDragged(x, y, button);
+    }
 }
 
 void Scene::mouseReleased(int x, int y, int button) {
     if (button == OF_MOUSE_BUTTON_MIDDLE) {
         panning_ = false;
+    }
+
+    for (auto& entity : entities_) {
+        entity->mouseReleased(x, y, button);
+    }
+}
+
+void Scene::keyPressed(int key) {
+    // Pressing 'N' creates a new node at the centre of the world (= centre of
+    // the screen when the camera is at the origin).
+    if (key == 'n' || key == 'N') {
+        auto node = std::make_shared<graph::ofNode>(glm::vec2(0.0f, 0.0f));
+        graph_.addNode(node);
+        addEntity(node);
     }
 }
 

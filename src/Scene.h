@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "Entity.h"
 #include "Camera.h"
+#include "Graph.h"
 
 #include <memory>
 #include <vector>
@@ -41,15 +42,24 @@ public:
     const Camera& getCamera() const { return camera_; }
 
     // Mouse interaction (forwarded from ofApp).
+    void mouseMoved(int x, int y);
     void mouseScrolled(int x, int y, float scrollX, float scrollY);
     void mousePressed(int x, int y, int button);
     void mouseDragged(int x, int y, int button);
     void mouseReleased(int x, int y, int button);
     void windowResized(int w, int h);
 
+    // Keyboard interaction (forwarded from ofApp).
+    void keyPressed(int key);
+
+    // The graph owned by this scene (nodes + edges).
+    graph::Graph& getGraph() { return graph_; }
+    const graph::Graph& getGraph() const { return graph_; }
+
 private:
     std::vector<std::shared_ptr<Entity>> entities_;
     Camera camera_;
+    graph::Graph graph_;
 
     bool setup_ = false;
 
