@@ -4,47 +4,39 @@
 
 namespace graph {
 
-void ofNode::setup() {
-    updateBoundingBox();
-}
-
-void ofNode::update() {
-    // Keep the cached bounds in sync with the (possibly moving) camera.
-    updateBoundingBox();
-}
-
 void ofNode::draw() {
     if (!scene_) {
         return;
     }
 
-    updateBoundingBox();
-
-    // Fill colour depends on the interaction state.
+    // Fill colour depends on the interaction state (inherited from ofEntity).
     ofColor fill = ofColor::yellow;
-    if (selected_) {
+    if (isSelected()) {
         fill = ofColor::orange;
-    } else if (hovered_) {
+    } else if (isHovered()) {
         fill = ofColor(255, 215, 0); // golden highlight
     }
 
     // Filled rounded rectangle.
     ofSetColor(fill);
     ofFill();
-    ofDrawRectRounded(boundingBox_, cornerRadius_);
+    ofDrawRectRounded(getBoundingBox(), cornerRadius_);
 
     // Black 2px outline.
     ofNoFill();
     ofSetColor(ofColor::black);
     ofSetLineWidth(outlineWidth_);
-    ofDrawRectRounded(boundingBox_, cornerRadius_);
+    ofDrawRectRounded(getBoundingBox(), cornerRadius_);
 
     // Restore sensible defaults for any subsequent drawing.
     ofFill();
     ofSetLineWidth(1.0f);
+
+    // Resize handles on top.
+    postDraw();
 }
 
-void ofNode::updateBoundingBox() {
+void ofNode::onWorldToBounds() {
     if (!scene_) {
         return;
     }
@@ -61,40 +53,20 @@ void ofNode::updateBoundingBox() {
                      bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
 }
 
-void ofNode::mouseMoved(int x, int y) {
-    updateBoundingBox();
-    hovered_ = boundingBox_.inside(x, y);
-}
-
-void ofNode::mousePressed(int x, int y, int button) {
-    if (button != OF_MOUSE_BUTTON_LEFT) {
+void ofNode::onBoundsToWorld() {
+    if (!scene_) {
         return;
     }
 
-    updateBoundingBox();
-    if (boundingBox_.inside(x, y)) {
-        selected_ = true;
-        dragging_ = true;
-        const glm::vec2 mouseWorld = scene_->screenToWorld(glm::vec2(x, y));
-        dragOffset_ = position_ - mouseWorld;
-    } else {
-        // Clicked away from this node -> clear selection.
-        selected_ = false;
-    }
-}
+    const glm::vec2 topLeft =
+        scene_->screenToWorld(glm::vec2(boundingBox_.x, boundingBox_.y));
+    const glm::vec2 bottomRight = scene_->screenToWorld(glm::vec2(
+        boundingBox_.x + boundingBox_.width, boundingBox_.y + boundingBox_.height));
 
-void ofNode::mouseDragged(int x, int y, int button) {
-    if (!dragging_ || button != OF_MOUSE_BUTTON_LEFT || !scene_) {
-        return;
-    }
-    const glm::vec2 mouseWorld = scene_->screenToWorld(glm::vec2(x, y));
-    position_ = mouseWorld + dragOffset_;
-}
-
-void ofNode::mouseReleased(int x, int y, int button) {
-    if (button == OF_MOUSE_BUTTON_LEFT) {
-        dragging_ = false;
-    }
+    position_.x = (topLeft.x + bottomRight.x) * 0.5f;
+    position_.y = (topLeft.y + bottomRight.y) * 0.5f;
+    size_.x = bottomRight.x - topLeft.x;
+    size_.y = topLeft.y - bottomRight.y;
 }
 
 } // namespace graph

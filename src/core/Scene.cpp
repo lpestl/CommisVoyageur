@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "Cursor.h"
 #include "../graph/views/ofNode.h"
 
 Scene::Scene() {
@@ -92,6 +93,10 @@ void Scene::mouseScrolled(int x, int y, float scrollX, float scrollY) {
 }
 
 void Scene::mouseMoved(int x, int y) {
+    // Reset to the default cursor; interactive entities override it (e.g. with
+    // a resize cursor when hovering a handle).
+    cursor::apply(cursor::Type::Arrow);
+
     for (auto& entity : entities_) {
         entity->mouseMoved(x, y);
     }
