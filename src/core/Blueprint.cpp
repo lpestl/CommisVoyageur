@@ -243,12 +243,13 @@ bool Blueprint::loadSettings() {
         return false;
     }
 
-    // Read an RGB colour stored as r/g/b attributes on the given tag.
+    // Read an RGBA colour stored as r/g/b/a attributes on the given tag.
     auto readColor = [&xml](const std::string& tag, const ofColor& fallback) {
         const int r = xml.getAttribute(tag, "r", static_cast<int>(fallback.r));
         const int g = xml.getAttribute(tag, "g", static_cast<int>(fallback.g));
         const int b = xml.getAttribute(tag, "b", static_cast<int>(fallback.b));
-        return ofColor(r, g, b);
+        const int a = xml.getAttribute(tag, "a", static_cast<int>(fallback.a));
+        return ofColor(r, g, b, a);
     };
 
     // Reads a single <linePattern> block (assumes the tag is already pushed).

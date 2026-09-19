@@ -11,16 +11,17 @@
 struct LinesPattern {
     LinesPattern() = default;
     LinesPattern(const ofColor& lineColor, float lineWidth, int stepUnitSize,
-                 const ofColor& labelColor = ofColor::black, bool bDrawLabel = false,
+                 const ofColor& labelColor = ofColor(0, 0, 0, 255),
+                 bool bDrawLabel = false,
                  int fontSize = 12, bool bBold = false)
         : lineColor(lineColor), lineWidth(lineWidth), stepUnitSize(stepUnitSize),
           labelColor(labelColor), bDrawLabel(bDrawLabel),
           fontSize(fontSize), bBold(bBold) {}
 
-    ofColor lineColor{ofColor::white};
+    ofColor lineColor{255, 255, 255, 255};
     float lineWidth = 1.0f;
     int stepUnitSize = 1;
-    ofColor labelColor{ofColor::black};
+    ofColor labelColor{0, 0, 0, 255};
     bool bDrawLabel = false;
     int fontSize = 12;
     bool bBold = false;
@@ -67,8 +68,8 @@ private:
     void onCameraChanged();
 
     // --- Settings loaded from XML (with sane defaults) ---
-    ofColor backgroundColor_{30, 70, 140};
-    ofColor lineColor_{ofColor::white}; // axes colour
+    ofColor backgroundColor_{30, 70, 140, 255};
+    ofColor lineColor_{255, 255, 255, 140}; // axes colour
     float axisLineWidth_ = 5.0f;
     bool bVisibleGrid_ = true;
     float kMinSpacingPx_ = 50.0f;
@@ -77,9 +78,9 @@ private:
 
     // Grid line patterns, kept sorted by stepUnitSize ascending (minor -> major).
     std::vector<LinesPattern> linesPatterns_ = {
-        LinesPattern{ofColor::white, 1.0f, 1},                       // minor
-        LinesPattern{ofColor::white, 2.0f, 5, ofColor::black, true}, // medium
-        LinesPattern{ofColor::white, 3.0f, 10, ofColor::black, true} // major
+        LinesPattern{ofColor(255, 255, 255, 140), 1.0f, 1},                              // minor
+        LinesPattern{ofColor(255, 255, 255, 140), 2.0f, 5, ofColor(0, 0, 0, 255), true}, // medium
+        LinesPattern{ofColor(255, 255, 255, 140), 3.0f, 10, ofColor(0, 0, 0, 255), true} // major
     };
 
     // Cached label fonts, keyed by font size.
