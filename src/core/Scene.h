@@ -49,6 +49,11 @@ public:
     void mouseReleased(int x, int y, int button);
     void windowResized(int w, int h);
 
+    // Last receiver in the click hierarchy. Override these to handle clicks
+    // that were not consumed by the entity under the cursor.
+    virtual Entity::MouseEventResult onLeftMouseClicked(int x, int y);
+    virtual Entity::MouseEventResult onRightMouseClicked(int x, int y);
+
     // Keyboard interaction (forwarded from ofApp).
     void keyPressed(int key);
 
@@ -66,4 +71,6 @@ private:
     // Panning state (middle mouse button).
     bool panning_ = false;
     glm::vec2 lastMouseScreen_{0.0f, 0.0f};
+
+    void dispatchMouseClick(int x, int y, int button);
 };

@@ -117,6 +117,14 @@ void ofEntity::mousePressed(int x, int y, int button) {
     }
 }
 
+Entity::MouseEventResult ofEntity::onLeftMouseClicked(int x, int y) {
+    // Preserve the default diagnostic message before starting the built-in
+    // selection, move, or resize interaction.
+    Entity::onLeftMouseClicked(x, y);
+    mousePressed(x, y, OF_MOUSE_BUTTON_LEFT);
+    return MouseEventResult::Handled;
+}
+
 void ofEntity::mouseDragged(int x, int y, int button) {
     if (button != OF_MOUSE_BUTTON_LEFT) {
         return;

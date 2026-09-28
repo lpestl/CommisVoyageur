@@ -16,6 +16,7 @@ public:
     explicit ofNode(const glm::vec2& position) : position_(position) {}
 
     void draw() override;
+    std::string getName() const override { return "ofNode"; }
 
     // World-space centre of the node.
     const glm::vec2& getPosition() const { return position_; }

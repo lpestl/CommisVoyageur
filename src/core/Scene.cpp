@@ -33,7 +33,7 @@ void Scene::addEntity(std::shared_ptr<Entity> entity) {
 
     entity->setScene(this);
     entities_.push_back(entity);
-
+    
     // If the scene is already running, bring the new entity up to date.
     if (setup_) {
         entity->setup();
@@ -108,9 +108,53 @@ void Scene::mousePressed(int x, int y, int button) {
         lastMouseScreen_ = glm::vec2(x, y);
     }
 
+    if (button == OF_MOUSE_BUTTON_LEFT || button == OF_MOUSE_BUTTON_RIGHT) {
+        dispatchMouseClick(x, y, button);
+        return;
+    }
+
     for (auto& entity : entities_) {
         entity->mousePressed(x, y, button);
     }
+}
+
+void Scene::dispatchMouseClick(int x, int y, int button) {
+    // Later entities are drawn over earlier ones, so inspect them first.
+    // Exactly one entity can be directly under the cursor; a NotHandled
+    // result is then bubbled to Scene.
+    for (auto it = entities_.rbegin(); it != entities_.rend(); ++it) {
+        const auto visualEntity = std::dynamic_pointer_cast<ofEntity>(*it);
+        if (!visualEntity || !visualEntity->getBoundingBox().inside(x, y)) {
+            continue;
+        }
+
+        const Entity::MouseEventResult result =
+            button == OF_MOUSE_BUTTON_LEFT
+                ? visualEntity->onLeftMouseClicked(x, y)
+                : visualEntity->onRightMouseClicked(x, y);
+        if (result == Entity::MouseEventResult::Handled) {
+            return;
+        }
+        break;
+    }
+
+    if (button == OF_MOUSE_BUTTON_LEFT) {
+        onLeftMouseClicked(x, y);
+    } else {
+        onRightMouseClicked(x, y);
+    }
+}
+
+Entity::MouseEventResult Scene::onLeftMouseClicked(int x, int y) {
+    std::cout << "Left mouse clicked on Scene"
+                         << " (x: " << x << "; y: " << y << ")" << std::endl;
+    return Entity::MouseEventResult::NotHandled;
+}
+
+Entity::MouseEventResult Scene::onRightMouseClicked(int x, int y) {
+    std::cout << "Right mouse clicked on Scene"
+                         << " (x: " << x << "; y: " << y << ")" << std::endl;
+    return Entity::MouseEventResult::NotHandled;
 }
 
 void Scene::mouseDragged(int x, int y, int button) {

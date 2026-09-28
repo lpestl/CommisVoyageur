@@ -22,6 +22,9 @@ public:
     void mouseDragged(int x, int y, int button) override;
     void mouseReleased(int x, int y, int button) override;
 
+    MouseEventResult onLeftMouseClicked(int x, int y) override;
+    std::string getName() const override { return "ofEntity"; }
+
     // Draws the resize handles (only when selected AND hovered). Concrete
     // entities call this from their draw() after drawing themselves.
     virtual void postDraw();
